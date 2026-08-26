@@ -1,7 +1,7 @@
 # Online Retail Transaction Analysis
  Online Retail Transaction Analysis is a data analytics project designed to analyse online retail transaction data and generate meaningful business insights. The project focuses on understanding customer purchasing behaviour, product performance, sales trends and geographical sales patterns.
 
- Python will be used data cleaning, exploratory data analysis, statistical analysis and masin learning. Streamlit will be used to develop an interactive data application that allows users to explore the analysis and visualisations through an easy to use interface.
+ Python will be used data cleaning, exploratory data analysis, statistical analysis and machine learning. Power BI will be used to develop an interactive dashboard that allows users to explore the analysis and visualisations through an easy to use interface.
 
  The project aims to transform raw retail transaction data into useful insights that can support business decision making, particularly around products, customers, sales performance and marketing strategies. 
 
@@ -23,32 +23,52 @@ The dataset contains transactional information from an online retail store, incl
 The business needs a clear understanding of how the online retail store is performing and where improvements can be made.
 
 * Analyse sales trends over time to identify periods of high and low revenue.
-* Identify the best-selling products and the products that generate the most revenue.
+* Identify the best-selling products and  that generate the most revenue.
 * Understand customer purchasing behaviour and determine which customers provide the highest value.
 * Measure sales performance by country to highlight key markets and potential growth areas.
 * Detect data quality issues such as missing customer information, cancelled orders, and unusual transaction values.
 * Segment customers based on purchasing behaviour to identify distinc customer groups and support targeted marketing and customer retention strategies.
 * Use the findings from the analysis to provide evidence based recommendations for inventory planning, marketing and customer retention.
-## Hypothesis and how to validate?
+## Hypotheses and Validation
 
-* The project will investigate the following hypothesis using the online retail transaction dataset.
+The project tests the following hypotheses using the raw and cleaned transaction datasets. `TotalAmount` is calculated as 'Quantity', 'UnitPrice' in the ETL notebook. Results should be reported as associations in this observational dataset, not as evidence that one factor causes another.
 
-* H1: The United Kingdom contributes the highest share of total revenue compared to other countries.
-  * Validation: Group the data by Country and calculate total revenue using Quantity * UnitPrice. Compare revenue by country using bar charts and summary tables.
+### H1: The United Kingdom is the largest market by sales value
 
-* H2: Sales volume and revenue increase during certain months or seasonal periods.
-  * Validation: Convert InvoiceDate to datetime, group sales by month, and analyse revenue and quantity trends over time using line charts.
+**Hypothesis:** The United Kingdom contributes the highest total sales value and transaction volume compared with other countries.
 
-* H3: A small number of products generate a large proportion of revenue.
-  * Validation: Group the dataset by StockCode or Description, calculate total revenue, and rank the top-performing products using bar charts.
+**Validation:** Use the cleaned dataset, group records by `Country`, and calculate the sum of `TotalAmount`, sum of `Quantity`, number of invoices, and each country's percentage of overall sales. 
+### H2: Sales show time-based or seasonal variation
 
-* H4: Some transactions contain data quality issues such as negative quantities, zero or negative unit prices, or missing customer IDs.
-  * Validation: Check for missing values, invalid quantities, invalid prices, and duplicate or cancelled transactions before analysis.
+**Hypothesis:** Sales value and sales volume vary across months, days, or hours, with identifiable high- and low-performing periods.
 
-* H5: High-value customers are a small segment of the customer base but contribute a significant portion of total sales.
-  * Validation: Group by CustomerID, calculate total spend, identify the top customers, and compare their contribution to total revenue.
+**Validation:** Convert `InvoiceDate` to datetime, derive year, month, day, hour, and day-of-week fields, then group by the relevant time period. Compare the sum of `TotalAmount`, sum of `Quantity`, invoice count, and average transaction value using line charts and grouped summaries. Seasonal claims should be based on repeated patterns where the available dates support comparison.
+
+### H3: A relatively small product set generates a large share of sales
+
+**Hypothesis:** Sales value is concentrated among a limited number of products rather than being evenly distributed across all products.
+
+**Validation:** Group the cleaned data by `StockCode` and, separately, by `Description`. Rank products by the sum of `TotalAmount`, calculate cumulative sales and cumulative sales percentage, and compare the top products with the full product catalogue. Use a ranked bar chart. State the concentration threshold explicitly, such as the percentage of sales generated by the top 10% of products.
+
+### H4: The raw data contains material data-quality issues
+
+**Hypothesis:** The raw data contains duplicates, missing descriptions, cancelled or returned transactions, and invalid quantity or price values that can distort sales analysis.
+
+**Validation:** Before cleaning, calculate missing values, duplicate rows, negative and zero `Quantity`, negative and zero `UnitPrice`, and invoices whose identifier begins with `C`. Compare the raw row count with the cleaned row count and document how each issue is treated. The ETL notebook records 5,268 duplicate rows, 1,454 missing descriptions, 10,624 negative quantities, 2,515 zero prices, and 2 negative prices.
+
+### H5: A small group of customers contributes a large share of sales
+
+**Hypothesis:** Customer sales value is concentrated among a relatively small number of high-value customers.
+
+**Validation:** Group the cleaned data by `CustomerID`, calculate total `TotalAmount`, invoice count, quantity, and average transaction value, then rank customers and calculate cumulative sales contribution. Compare the top 10% with the complete customer base. This hypothesis is supported only when the selected small customer group contributes a clearly larger share of sales than its share of customers.
+
+### H6: Transaction features can predict transaction value
+
+**Hypothesis:** Historical transaction features contain enough information to predict `TotalAmount` better than a simple baseline.
+
+**Validation:** Use `Quantity`, `UnitPrice`, date-derived features from `InvoiceDate`, and one-hot encoded `Country` as model inputs. Exclude invoice, stock-code, and description identifiers from direct inputs. Split the data into training and test sets using an 80/20 split with `random_state=42`, train Linear Regression as a baseline and Random Forest Regression as a flexible comparison, and evaluate both on unseen data using MAE, MSE, and $R^2$. Compare model performance with the baseline and inspect residuals because `TotalAmount` is mathematically calculated from `Quantity` and `UnitPrice`, this result measures transaction-value reconstruction more than genuinely future sales forecasting.
+
 ## Project Plan
-
 * Define the business problem and project objective. 
 * Obtain and inspect the dataset.
 * Create an ETL pipeline. 
@@ -66,80 +86,158 @@ The business needs a clear understanding of how the online retail store is perfo
 
 ## The rationale to map the business requirements to the Data Visualisations
 
-* List your business requirements and a rationale for mapping them to the Data Visualisations
+The visualisations were selected to match the type of decision each business requirement
+requires. The cleaned dataset and the derived `TotalAmount` field provide a consistent
+basis for comparing sales value, sales volume, products, customers, countries and time
+periods. The dashboard will combine summary indicators with charts that allow users to
+filter and investigate the underlying transactions.
+
+| Business requirement | Planned or implemented visualisation | Rationale and business use |
+| --- | --- | --- |
+| Analyse sales trends over time and identify high- and low-performing periods. | Monthly sales line chart, supported by time-period summaries and KPI cards for total sales, quantity and invoice count. | A line chart makes changes and repeated patterns over time easy to see. It helps the business identify strong or weak periods for stock planning, promotions and staffing. Seasonal conclusions will only be made where the available dates provide enough repeated periods for comparison. |
+| Identify the best-selling products and products generating the most revenue. | Ranked horizontal bar charts for the leading products by quantity sold and by `TotalAmount`; a cumulative sales or Pareto view for product concentration. | Ranking makes the difference between high- and low-performing products immediately visible. Showing quantity and revenue separately avoids treating popularity and profitability as the same measure and supports inventory and product-range decisions. |
+| Understand customer purchasing behaviour and identify the highest-value customers. | Customer-level summary table or ranked bar chart showing `TotalAmount`, invoice count, quantity and average transaction value, with customer filters. | These measures show both purchase frequency and monetary value. They help distinguish occasional high-value purchases from loyal repeat customers and support retention, loyalty and targeted marketing decisions. |
+| Measure sales performance by country and identify key markets or growth areas. | Country sales bar chart, with sales percentage, quantity and invoice or customer counts available in tooltips or summary tables. | A ranked comparison shows where sales are concentrated and makes smaller markets visible. Combining value with volume prevents a country with many low-value transactions from being interpreted in the same way as a high-value market.
+| Segment customers according to purchasing behaviour. | Customer segment comparison using customer value, frequency, quantity and recency-style measures, displayed with a bar chart or scatter plot and segment filters. | A segment view turns many individual customer records into actionable groups. Comparing segment size and sales contribution helps prioritise communications, retention activity and offers. Segmentation is interpreted as descriptive behaviour rather than a claim about customer motivation. |
+| Use the findings to support inventory planning, marketing and customer retention. | Using Power BI interactive dashboard combining the time, product, customer and country views, with slicers for date, country, product and customer segment. | Linking the views allows a user to move from an overall result to the transactions behind it. This makes the analysis useful for both non-technical decision makers who need a quick summary and analysts who need to investigate the detail. |
+| Assess whether transaction features predict transaction value. | Actual-versus-predicted scatter plot, residual inspection and model-performance summary comparing Linear Regression with Random Forest Regression. | The scatter plot shows how closely predictions follow observed `TotalAmount`, while MAE, MSE and $R^2$ provide measurable comparisons because `TotalAmount` is calculated from `Quantity` and `UnitPrice`, this visualisation evaluates transaction-value reconstruction rather than reliable future-sales forecasting. |
+
+The visualisations are intended to communicate associations in the observational dataset,
+not to prove that one factor causes another. Counts, percentages and monetary values will
+be labelled clearly, and cancelled or invalid records will be treated according to the ETL
+rules before they are used in the main sales visuals.
 
 ## Analysis techniques used
 
-* List the data analysis methods used and explain limitations or alternative approaches.
-* How did you structure the data analysis techniques? Justify your response.
-* Did the data limit you, and did you use an alternative approach to meet these challenges?
-* How did you use generative AI tools to help with ideation, design thinking and code optimisation?
+### Methods used and limitations
+
+The project uses the following analytical methods:
+
+* **ETL and data-quality analysis:** The raw data is inspected and cleaned by checking data types, missing values, duplicate rows, cancelled invoices, invalid quantities and invalid prices. `TotalAmount` is then derived as `Quantity * UnitPrice`, and the cleaned data is saved for the later analysis. This improves consistency, but removing invalid, cancelled or incomplete records can reduce the dataset and may remove information about returns or customer behaviour.
+* **Descriptive statistics:** `count`, mean, median, standard deviation, quartiles and ranges are used to summarise `Quantity`, `UnitPrice` and `TotalAmount`. Medians and percentiles are particularly useful because retail transaction values are skewed by a small number of large purchases. These summaries describe the data but do not explain why the patterns occur.
+* **Exploratory data analysis:** Histograms, box plot, scatter plots and a correlation heatmap are used to examine distributions, outliers and relationships between numerical variables. Correlation shows association rather than causation and can be influenced by extreme values.
+* **Business aggregation and visualisation:** Transactions are grouped by month, product, country and customer to calculate sales value, quantity, invoice counts, percentages and average transaction value. Line charts are used for time trends, while ranked bar charts and summary tables are used for comparisons. These methods make results accessible, although totals can hide variation within individual customers, products or countries.
+* **Customer analysis and segmentation:** Customer-level value, frequency, quantity and recency-style measures are used to compare purchasing behaviour and provide a basis for descriptive customer segments. 
+* **Supervised machine learning:** Linear Regression provides a simple baseline and Random Forest Regression provides a more flexible comparison. The models use `Quantity`, `UnitPrice`, date-derived features and one-hot encoded `Country`, and are evaluated on an 80/20 train-test split using MAE, MSE and $R^2$. Actual-versus-predicted plots and residual checks are used to interpret performance. Because `TotalAmount` is calculated from `Quantity` and `UnitPrice`, this is mainly transaction-value reconstruction, not reliable forecasting of future sales.
+
+### Structure and justification
+
+The analysis follows a reproducible sequence: extract and inspect the raw data, clean and transform it, explore distributions and data quality, calculate business metrics, create visualisations, and finally test the predictive modelling approach. This order prevents unreliable raw records from driving the main conclusions and ensures that the same cleaned fields are used by the EDA, visualisation, Power BI and machine-learning work. The methods progress from simple summaries to more complex analysis so that the business results remain understandable and can be checked against the underlying transactions.
+
+### Data limitations and alternative approaches
+
+The dataset contains historical transactional records rather than complete customer profiles, marketing data, costs, inventory levels or profit margins. Missing customer information limits customer-level analysis, and the available date range limits the strength of seasonal conclusions. The data is also observational, so the results identify associations and cannot establish causation. Transaction-level random splitting is suitable for the current reconstruction exercise, but a time-based split would be a stronger alternative for testing future forecasting.
+
+### Use of generative AI
+
+Generative AI GitHub copilot was used as supporting tools during the developement of this project. It was used to help with project understanding, improving python code and improving the structure, wording of the README. AI suggestions were treated as drafts rather than final answers. Final decision and interpretations were made by student (me).
 
 ## Ethical considerations (optional)
 
-* Feel free to delete this section if this is a data visualisation only (unit 1 or 2) project submission.
-* Were there any data privacy, bias or fairness issues with the data?
-* How did you overcome any legal or societal issues?
+* The dataset contains transaction level retail information, including customer and sales fields. Data quality issues were considered because missing values, duplicate records, cancelled tarnsactions, negative quantities and invalid prices could be effect the analysis. These issues were identified and addressed during the data cleaning process before the main analysis and modelling.
 
-## Dashboard Design (optional)
+* The machine leanrning results are interpreted carefully. The models are used to investigate transaction value relationships and predictive performance.
 
-* Feel free to delete this section if this is a data visualisation only (unit 1 or 2) project submission.
-* List all dashboard pages and their content, either blocks of information or widgets, like buttons, checkboxes, images, or any other item that your dashboard library supports.
-* Later, during project development, you may revisit your dashboard plan to update a feature (for example, at the beginning of the project, you were confident you would use a given plot to display an insight, but later you used another plot type).
-* How were data insights communicated to technical and non-technical audiences?
-* Explain how the dashboard was designed to communicate complex data insights to different audiences. 
+## Power BI Dashboard 
+* The competeted Power BI dashboard can be accessed using the link below:
+
+https://app.powerbi.com/groups/me/reports/7b9694b9-04cd-4f5f-b63e-f4321de35880/fd9fe41bb84d816dea2a?experience=power-bi
+
+The dashboard was developed using Microsoft Power BI and the cleaned dataset produced by the ETL notebook. It presents the main business findings in number of focused pages so
+that users can start with an overall view and then investigate sales by time, product, customer and country. The report is stored in`PowerBI/Online_Retail_Transaction_final.pbix`.
+
+### Dashboard pages and contents
+
+1. **Overview:** KPI cards for total sales, total transactions, unique customer, average transaction value; a monthly sales line chart; and summary comparisons by product.
+	This page gives managers a quick view of overall performance and the most important
+	movements in the business.
+2. **Sales trends:** The Total Sales by Month line chart shows how sales performance changes across the year. It allows the business to identify periods of higher and lower sales activity and observe changes in sales performance over time. The trend can support sales planning, inventory management, marketing activities and identification of stronger or weaker trading periods.
+3. **Product performance:** Ranked bar charts for products by quantity sold and
+	`TotalAmount`, together with a product table showing the key measures. This page helps identify high-demand products and products that make the greatest contribution
+	to sales value.
+4. **Customer analysis:** The dashboard identifies the top 10 Customer by Sales using a ranked horizontal bar chart. This highlights the customers contributing the highest sales values and helps identify high value customers for customer segmentation, retention planning and prioritising key accounts. 
+5. **Geographical performance:** The sales by country map visualise total sale across different countries, providing an overview of geographical sales performance. It allows the business to compare markets and identity countries contributing to overall sales. The Date Filter can be used to analyse geographical performance over a selected period.
+
+
+### Interactive features
+
+The report uses interactive filters to allow users to explore the data from different perspective. The dashboard include date, country and product filters were applicable. Selecting a filter updates the related visuals on the page, allowing users to focus on a specific period, market or product.
+
+The report also uses interactive visual selections and cross filtering, where selecting a data point in one visual can update related visual. Page tab allow users to navigate between the Sales Overview, Geographical & customer insights, and Business Insights & Storytelling pages.
+
+These interactive features allows users to explore the data without changing the underlying dataset and make it easier to investigate sales performance, geographical markets, products and customers.
+
+### Communicating insights to different audiences
+
+* The dashboard is designed to communicate key sales insights to both non-technical and analytical audiences. KPI cards provide a quick summary of total sales, transaction volume, unique customers and average transaction value, while chart provide visual comparisons that are easier to interpret.
+
+* The Sales overview page presents the main sales trends and product performance, while the Geographical & Customer Insights page allows users to explore sales by country and identify the top customers by sales. The Business Insights & Storytelling page provides further analysis of the key findings.
+
+* Interactive date, country and product filters allow users to focus the analysis on specific periods, markets or products. Clear chart titles, labels and consistent formatting are used to make the information understandable to users without requiring technical knowledge.
+
+The dashboard presents relationships and patterns observed in the data and does not treat them as evidence of causation.
 
 ## Unfixed Bugs
 
-* Please list any unfixed bugs and explain why they were not fixed. This section should include shortcomings of the frameworks or technologies used. Although time can be a significant variable to consider, paucity of time and difficulty understanding implementation are not valid reasons to leave bugs unfixed.
-* Did you recognise gaps in your knowledge, and how did you address them?
-* If applicable, include evidence of feedback received (from peers or instructors) and how it improved your approach or understanding.
+No known unfixed bugs remain in the final project. The ETL and analysis notebook was tested after data cleaning and the Power BI report was tested after data cleaning. Power BI report was checked to ensure that the main visuals, filters and calaulated measures work as intended. 
+
+A limitation is that the report depends on the quality and completeness of the original transaction data. Some records are removed or excluded during cleaning because of missing descriptions, invalid quantities or price, duplicate records and cancelled transactions. These are treated as data quality limitations rather than software bugs.
+
+ The machine learning analysis is also limited by the available transaction features and historical dataset. Therefore, model results should be interpreted as an analysis of the available data rather than a guarantee of future sales performance.
 
 ## Development Roadmap
 
-* What challenges did you face, and what strategies were used to overcome these challenges?
-* What new skills or tools do you plan to learn next based on your project experience? 
+The project was developed through several stages: ETL and data cleaning, exploratory data analysis (EDA), data visualisation, Power BI dashboard developement and machine learning analysis. 
 
-## Deployment (optional)
+During developement, the main challenges were identifying and handling data quality issues, creating the 'TotaoAmount field'
+validating the business hypotheses, selecting appropriate visualisations and preparing features for machine learning analysis. These challenges were addressed through data quality checks, exploratory analysis, validation of results and interactive testing. 
 
-* If this is a Unit 3 Streamlit, Power BI or Tableau Public project, then you can include a link here and explain how you hosted the dashboard.
+Future improvements could include testing additional machine learning models, improving feature engineering and model tuning, and adding more detailed customer and product segmentation to the Power BI dashboard.
 
-### Heroku (optional)
-
-* This section is necessary only if you are deploying a Streamlit app to Heroku as part of your submission for units 2 and 3. 
-* The App live link is: https://YOUR_APP_NAME.herokuapp.com/ 
-* Set the `.python-version` Python version to a [Heroku-22](https://devcenter.heroku.com/articles/python-support#supported-runtimes) stack currently supported version.
-* The project was deployed to Heroku using the following steps.
-
-1. Log in to Heroku and create an App
-2. From the Deploy tab, select GitHub as the deployment method.
-3. Select your repository name and click Search. Once it is found, click Connect.
-4. Select the branch you want to deploy, then click Deploy Branch.
-5. The deployment process should happen smoothly if all deployment files are fully functional. Click the button Open App at the top of the page to access your App.
-6. If the slug size is too large, then add large files not required for the app to the `.slugignore` file.
+The project helped develop my skills in ETL, EDA, data visualisation, Power BI, hypothesis validation and machine learning.
 
 ## Main Data Analysis Libraries
 
-* Here you should list the libraries you used in the project and provide an example(s) of how you used these libraries.
+The project uses Python libraries for data preparation, analysis, visualisation and
+machine learning. Microsoft Power BI is used separately to build the interactive
+dashboard.
+
+* **Pandas:** Used to load CSV files, inspect the transaction data, clean records,
+	convert `InvoiceDate`, group transactions and calculate `TotalAmount`. For example,
+	`df.groupby('Country')['TotalAmount'].sum()` calculates sales by country.
+* **NumPy:** Used for numerical operations and feature preparation, including handling
+	arrays and calculating numerical values used during analysis and modelling.
+* **Matplotlib:** Used to create line charts, bar charts, histograms, box plots and
+	scatter plots. For example, monthly sales are displayed as a line chart to show
+	changes over time.
+* **Seaborn:** Used to create statistical visualisations, including the correlation
+	heatmap used to examine relationships between `Quantity`, `UnitPrice` and
+	`TotalAmount`.
+* **SciPy:** Used for statistical analysis, including Pearson correlation and related
+	statistical calculations.
+* **Scikit-learn:** Used for the machine-learning workflow. `train_test_split` creates
+	the training and test sets, `LinearRegression` provides a baseline,
+	`RandomForestRegressor` provides a flexible comparison, and MAE, MSE and $R^2$ are
+	used to evaluate the models.
+* **ipywidgets:** Used in the visualisation notebook to support interactive controls
+	for exploring selected parts of the retail data.
+* **Power BI:** Used to combine KPI cards, trend charts, product and customer views,
+	country analysis, filters and cross-filtering in the final interactive dashboard.
 
 ## Credits
 
-* In this section, you need to reference where you got your content, media and extra help from. It is common practice to use code from other repositories and tutorials; however, it is important to be very specific about these sources to avoid plagiarism. 
-* You can break the credits section into Content and Media, depending on what you include in your project. 
+* The raw Online Retail transaction dataset was sourced from Kaggle. 
+* GitHub Copilot was used as a supporting tool.
+* LMS 
 
-### Content 
+### Media and other resources
 
-- The text for the Home page was taken from the Wikipedia Article A
-- Instructions on how to implement form validation were taken from a [Specific YouTube Tutorial](https://www.youtube.com/)
-- The icons in the footer were taken from [Font Awesome](https://fontawesome.com/)
-
-### Media
-
-- The photos used on the home and sign-up page are from This Open-Source site
-- The images used for the gallery page were taken from this other open-source site
-
-
+* No external photographs, illustrations or decorative media were used in the
+	notebooks or Power BI dashboard. The charts and dashboard visuals were created from
+	the project dataset.
+* The Code Institute logo displayed in the README is provided by Code Institute and is
+	linked to its original hosted image.
 
 ## Acknowledgements (optional)
 
-* Thank the people who supported this project.
+* I would like to thank my tutor for the guidance. I also acknowledge Code Institute for providing the project requirements, learning materials and supporting resources.
